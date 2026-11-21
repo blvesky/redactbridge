@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RedactBridge — private intake notes, cloud-grade case briefs</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">RB</div>
+    <div>
+      <h1>RedactBridge</h1>
+      <p class="tagline">Sensitive intake notes are redacted <strong>on this device</strong>. Only the redacted text ever reaches the cloud.</p>
+    </div>
+  </div>
+  <div class="badge-wrap">
+    <div class="badge-label">Last inference ran</div>
+    <div id="sourceBadge" class="badge badge-idle">— not run yet —</div>
+    <div id="badgeDetail" class="badge-detail">Redaction runs locally; the case brief runs in the cloud.</div>
+  </div>
+</header>
+
+<div class="privacy-strip">
+  <span>🔒 Raw notes never leave this browser tab</span>
+  <span>✂️ Redaction: on-device (rules engine + Gemini Nano 4 via Firebase AI Logic)</span>
+  <span>☁️ Cloud only ever sees the redacted text you approve below</span>
+</div>
+
+<main>
+  <section class="card" id="step1">
+    <h2><span class="step">1</span> Paste the intake note</h2>
+    <p class="hint">Raw notes stay in this browser tab. Nothing is uploaded in this step. Demo data below is fully fictional.</p>
+    <textarea id="inputText" rows="8" placeholder="Paste or type the raw intake note here…"></textarea>
+    <div class="row">
+      <button id="loadSampleCn" class="btn btn-ghost" type="button">Load sample (中文 · shelter intake)</button>
+      <button id="loadSampleEn" class="btn btn-ghost" type="button">Load sample (EN · legal aid)</button>
+      <span class="spacer"></span>
+      <button id="clearBtn" class="btn btn-ghost" type="button">Clear</button>
+      <button id="redactBtn" class="btn btn-primary" type="button">Redact on this device →</button>
+    </div>
+  </section>
+
+  <section class="card" id="step2">
+    <h2><span class="step">2</span> Review every redaction</h2>
+    <p class="hint">The on-device step proposes redactions — <strong>you are the final check</strong>. Untick any item that is not actually personal data (it will be restored in the outgoing text), edit the outgoing text directly if needed, and check the safety scan before sending. Only the outgoing text below can go to the cloud.</p>
+    <div id="stats" class="stats"></div>
+    <div class="compare">
+      <div>
+        <h3>Original (never leaves the device)</h3>
+        <div id="originalView" class="view view-original">Run step 1 to see the comparison.</div>
+      </div>
+      <div>
+        <h3>Redacted preview (approved items only)</h3>
+        <div id="redactedView" class="view view-redacted">—</div>
+      </div>
+    </div>
+    <table id="mapTable" class="map-table">
+      <thead><tr><th>Redact?</th><th>Placeholder</th><th>Type</th><th>Original (local only)</th><th>Count</th></tr></thead>
+      <tbody><tr><td colspan="5" class="empty">No redactions yet.</td></tr></tbody>
+    </table>
+
+    <h3 class="subhead">Outgoing text — exactly what will be sent to the cloud</h3>
+    <textarea id="outgoingText" rows="6" placeholder="The approved redacted text will appear here. You can edit it before sending."></textarea>
+    <div class="row">
+      <button id="copyRedactedBtn" class="btn btn-ghost" type="button" disabled>Copy outgoing text</button>
+      <button id="doubleCheckBtn" class="btn btn-ghost" type="button" disabled>Run on-device AI double-check (Gemini Nano 4)</button>
+      <span id="copyStatus" class="status"></span>
+    </div>
+    <div id="safetyLine" class="safety-line">Safety scan: not run yet.</div>
+    <div id="doubleCheckOut" class="view view-check" hidden></div>
+  </section>
+
+  <section class="card" id="step3">
+    <h2><span class="step">3</span> Generate the case brief in the cloud</h2>
+    <p class="hint">The <em>outgoing redacted</em> text above is sent to a cloud model through Firebase AI Logic (<code>ONLY_IN_CLOUD</code>) to draft the case brief, referral plan and paperwork outline.</p>
+    <div id="mockBanner" class="mock-banner" hidden>⚠ MOCK MODE — no Firebase project is configured, so the brief below is a local template, <strong>not</strong> a model call. Configure <code>firebase-config.js</code> (see README) for the real AI Logic path.</div>
+    <div class="row">
+      <label class="lang-label" for="briefLang">Brief language</label>
+      <select id="briefLang" class="select">
+        <option value="en" selected>English</option>
+        <option value="zh">中文（简体）</option>
+      </select>
+      <button id="briefBtn" class="btn btn-primary" type="button" disabled>Generate case brief from redacted text →</button>
+      <span id="briefStatus" class="status"></span>
+    </div>
+    <div id="briefOut" class="view view-brief">The brief will appear here.</div>
+    <div class="row">
+      <button id="copyBriefBtn" class="btn btn-ghost" type="button" disabled>Copy brief</button>
+      <button id="downloadCaseBtn" class="btn btn-ghost" type="button" disabled>Download case file (.md)</button>
+      <span id="exportStatus" class="status"></span>
+    </div>
+  </section>
+
+  <section class="card" id="diagnostics">
+    <h2>Diagnostics — where does each step run?</h2>
+    <table class="map-table">
+      <thead><tr><th>Function</th><th>InferenceMode</th><th>Model</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Sensitive-field extraction + redaction</td><td><code>ONLY_ON_DEVICE</code></td><td>Gemini Nano 4 (on-device)</td><td>Raw notes contain personal data; they must never leave the device. The deterministic rules engine runs this step locally and stays on as a cross-check under the model.</td></tr>
+        <tr><td>Redaction double-check (single-turn)</td><td><code>ONLY_ON_DEVICE</code></td><td>Gemini Nano 4 (on-device)</td><td>A second scan for missed personal data; case material review is device work by design, never routed to the cloud.</td></tr>
+        <tr><td>Case brief + referral plan</td><td><code>ONLY_IN_CLOUD</code></td><td>gemini-3.8-flash (free tier)</td><td>Input is already redacted; needs long-text reasoning.</td></tr>
+        <tr><td>Document polish / rewrite</td><td><code>PREFER_IN_CLOUD</code></td><td>gemini-3.5-flash-lite</td><td>Input is redacted; cloud preferred, device fallback acceptable.</td></tr>
+      </tbody>
+    </table>
+    <div class="diag-grid">
+      <div>Firebase configured: <strong id="diagConfig">checking…</strong></div>
+      <div>Chrome Prompt API (<code>LanguageModel</code>): <strong id="diagPromptApi">checking…</strong></div>
+      <div>On-device availability: <strong id="diagAvail">checking…</strong></div>
+    </div>
+    <div class="row">
+      <button id="probeBtn" class="btn btn-ghost" type="button">Initialize / probe on-device model</button>
+      <span id="probeStatus" class="status"></span>
+    </div>
+    <pre id="probeOut" class="probe-out" hidden></pre>
+    <p class="hint">Fallback rule: if the on-device model is unavailable, the device step reports it here and the badge shows the fallback — the app never silently sends raw text to the cloud instead.</p>
+  </section>
+
+  <pre id="selftest" class="selftest" hidden></pre>
+</main>
+
+<footer>
+  <p>RedactBridge — built for #BuildHybridAI 2026 (Firebase AI Logic hybrid inference). All demo data is fictional. Redaction is assistive: the worker reviews and approves every item before anything is sent, and a deterministic safety scan re-checks the outgoing text.</p>
+</footer>
+
+<!-- Optional: copy firebase-config.example.js to firebase-config.js and uncomment.
+<script src="firebase-config.js"></script> -->
+<script src="redact.js"></script>
+<script src="cloud.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

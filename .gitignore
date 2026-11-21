@@ -1,0 +1,9 @@
+# Real Firebase config and secrets — NEVER commit (hackathon FAQ rule)
+firebase-config.js
+.env
+.env.*
+*.local
+
+# Local scratch
+node_modules/
+.DS_Store
