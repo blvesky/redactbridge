@@ -7,3 +7,4 @@ firebase-config.js
 # Local scratch
 node_modules/
 .DS_Store
+.firebase/

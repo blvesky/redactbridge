@@ -35,6 +35,14 @@
     ]).then(function (mods) {
       var appMod = mods[0], aiMod = mods[1], acMod = mods[2];
       _app = appMod.initializeApp(global.RB_FIREBASE_CONFIG);
+      if (global.RB_APPCHECK_SITE_KEY && !(typeof self !== "undefined" && self.FIREBASE_APPCHECK_DEBUG_TOKEN)) {
+        try {
+          acMod.initializeAppCheck(_app, {
+            provider: new acMod.ReCaptchaEnterpriseProvider(global.RB_APPCHECK_SITE_KEY),
+            isTokenAutoRefreshEnabled: true
+          });
+        } catch (e) { /* fall through to debug provider below */ }
+      }
       if (typeof self !== "undefined" && self.FIREBASE_APPCHECK_DEBUG_TOKEN) {
         try {
           acMod.initializeAppCheck(_app, {

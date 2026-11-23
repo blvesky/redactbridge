@@ -1,0 +1,1 @@
+{"hosting":{"cleanUrls":false,"ignore":["firebase.json",".firebaserc","**/.*","**/node_modules/**","tests/**","firebase-config.example.js"],"public":".","trailingSlash":false}}
