@@ -100,7 +100,7 @@
       <tbody>
         <tr><td>Sensitive-field extraction + redaction</td><td><code>ONLY_ON_DEVICE</code></td><td>Gemini Nano 4 (on-device)</td><td>Raw notes contain personal data; they must never leave the device. The deterministic rules engine runs this step locally and stays on as a cross-check under the model.</td></tr>
         <tr><td>Redaction double-check (single-turn)</td><td><code>ONLY_ON_DEVICE</code></td><td>Gemini Nano 4 (on-device)</td><td>A second scan for missed personal data; case material review is device work by design, never routed to the cloud.</td></tr>
-        <tr><td>Case brief + referral plan</td><td><code>ONLY_IN_CLOUD</code></td><td>gemini-3.8-flash (free tier)</td><td>Input is already redacted; needs long-text reasoning.</td></tr>
+        <tr><td>Case brief + referral plan</td><td><code>ONLY_IN_CLOUD</code></td><td>gemini-3.5-flash (free tier)</td><td>Input is already redacted; needs long-text reasoning.</td></tr>
         <tr><td>Document polish / rewrite</td><td><code>PREFER_IN_CLOUD</code></td><td>gemini-3.5-flash-lite</td><td>Input is redacted; cloud preferred, device fallback acceptable.</td></tr>
       </tbody>
     </table>

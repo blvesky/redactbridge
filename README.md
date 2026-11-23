@@ -51,7 +51,7 @@ performance:
    still present, or new personal data typed back in). An optional
    **on-device AI double-check** (Gemini Nano 4, `ONLY_ON_DEVICE`) adds a
    model-based second scan.
-4. **Cloud brief.** The outgoing text goes to `gemini-3.8-flash` via Firebase
+4. **Cloud brief.** The outgoing text goes to `gemini-3.5-flash` via Firebase
    AI Logic (`ONLY_IN_CLOUD`) and returns a structured case brief: situation
    summary, risk factors, immediate needs, referrals and next steps — in
    English or Simplified Chinese. Copy it, or download a case file (.md)
@@ -64,7 +64,7 @@ performance:
 |---|---|---|---|
 | Sensitive-field extraction + redaction | `ONLY_ON_DEVICE` | Gemini Nano 4 (on-device) | Raw notes are personal data; they must never leave the device. The rules engine runs this step locally and cross-checks the model. |
 | Redaction double-check (single-turn) | `ONLY_ON_DEVICE` | Gemini Nano 4 (on-device) | Reviewing case material is device work by design; never routed to the cloud. |
-| Case brief + referral plan | `ONLY_IN_CLOUD` | gemini-3.8-flash (free tier) | Input is already redacted; needs long-text reasoning. |
+| Case brief + referral plan | `ONLY_IN_CLOUD` | gemini-3.5-flash (free tier) | Input is already redacted; needs long-text reasoning. |
 | Document polish / rewrite | `PREFER_IN_CLOUD` | gemini-3.5-flash-lite | Input is redacted; cloud preferred, device fallback acceptable. |
 
 ## Run it

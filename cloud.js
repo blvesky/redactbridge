@@ -25,9 +25,9 @@
       global.RB_FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY");
   }
 
-  var _app = null, _ai = null;
+  var _app = null, _ai = null, _aiMod = null;
   function loadFirebase() {
-    if (_app) return Promise.resolve({ app: _app, ai: _ai });
+    if (_app) return Promise.resolve({ app: _app, ai: _ai, aiMod: _aiMod });
     return Promise.all([
       import(CDN + "firebase-app.js"),
       import(CDN + "firebase-ai.js"),
@@ -58,6 +58,7 @@
           });
         } catch (e) { /* App Check optional in skeleton; real setup registers the debug token in Console. */ }
       }
+      _aiMod = aiMod;
       _ai = aiMod.getAI(_app, { backend: new aiMod.GoogleAIBackend() });
       return { app: _app, ai: _ai, aiMod: aiMod };
     });
@@ -144,18 +145,36 @@
     }
     return loadFirebase().then(function (ctx) {
       var aiMod = ctx.aiMod;
-      var model = aiMod.getGenerativeModel(ctx.ai, {
-        mode: aiMod.InferenceMode.ONLY_IN_CLOUD,
-        inCloudParams: { model: "gemini-3.8-flash" }
-      });
-      return model.generateContent(briefPrompt(redactedText, items, lang)).then(function (result) {
-        return {
-          text: result.response.text(),
-          inferenceSource: result.response.inferenceSource || "IN_CLOUD",
-          mock: false,
-          model: "gemini-3.8-flash"
-        };
-      });
+      var prompt = briefPrompt(redactedText, items, lang);
+      // Model availability verified live against this project (2026-11-23,
+      // raw generateContent calls with a valid App Check token):
+      // gemini-2.5-flash / -lite return 404 ("no longer available to new
+      // users"); gemini-3.8-flash exists but was saturated (500 "high
+      // demand" / 503 "deadline expired" past the SDK's 180s default
+      // abort); gemini-3.5-flash and gemini-3.5-flash-lite answer 200.
+      // So: long per-request timeout, full Flash twice, then the Lite as
+      // fallback — the returned `model` names the model that actually ran.
+      var attempts = ["gemini-3.5-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"];
+      function tryAttempt(i) {
+        var name = attempts[i];
+        var model = aiMod.getGenerativeModel(ctx.ai, {
+          mode: aiMod.InferenceMode.ONLY_IN_CLOUD,
+          inCloudParams: { model: name, requestOptions: { timeout: 600000 } }
+        });
+        return model.generateContent(prompt).then(function (result) {
+          return {
+            text: result.response.text(),
+            inferenceSource: result.response.inferenceSource || "IN_CLOUD",
+            mock: false,
+            model: name
+          };
+        }).catch(function (err) {
+          if (i + 1 >= attempts.length) throw err;
+          return new Promise(function (res) { setTimeout(res, 4000); })
+            .then(function () { return tryAttempt(i + 1); });
+        });
+      }
+      return tryAttempt(0);
     });
   }
 
