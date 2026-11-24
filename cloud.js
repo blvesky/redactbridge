@@ -148,10 +148,11 @@
       var prompt = briefPrompt(redactedText, items, lang);
       // Model availability verified live against this project (2026-11-23,
       // raw generateContent calls with a valid App Check token):
-      // gemini-2.5-flash / -lite return 404 ("no longer available to new
-      // users"); gemini-3.8-flash exists but was saturated (500 "high
-      // demand" / 503 "deadline expired" past the SDK's 180s default
-      // abort); gemini-3.5-flash and gemini-3.5-flash-lite answer 200.
+      // the older 2.5 Flash / -lite tiers return 404 ("no longer available
+      // to new users"); the newer flagship Flash tier exists but was
+      // saturated (500 "high demand" / 503 "deadline expired" past the
+      // SDK's 180s default abort); gemini-3.5-flash and
+      // gemini-3.5-flash-lite answer 200.
       // So: long per-request timeout, full Flash twice, then the Lite as
       // fallback — the returned `model` names the model that actually ran.
       var attempts = ["gemini-3.5-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"];
