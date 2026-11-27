@@ -157,7 +157,7 @@
     state.result = result;
     renderReview();
     setBadge("local", "LOCAL · on-device step",
-      "Redaction ran in this browser (rules engine). In the full build this step is Gemini Nano 4 via AI Logic ONLY_ON_DEVICE.");
+      "Redaction ran in this browser (rules engine). An optional Gemini Nano 4 double-check via AI Logic (ONLY_ON_DEVICE) is available in the review step.");
     return result;
   }
 

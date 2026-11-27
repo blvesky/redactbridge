@@ -40,9 +40,9 @@ performance:
 2. **On-device redaction.** A deterministic rules engine (labels, surname
    dictionary, ID birthdate shape + checksum, bank-card Luhn check) proposes
    redactions for names, phone numbers, ID numbers, addresses, emails and
-   bank cards — 100% locally, zero bytes uploaded. In the full Firebase
-   configuration, Gemini Nano 4 performs the same step through AI Logic and
-   the rules engine stays on as a deterministic cross-check.
+   bank cards — 100% locally, zero bytes uploaded. The rules engine performs
+   this step in every configuration; Gemini Nano 4 is used only for the
+   optional on-device double-check in step 3.
 3. **Human review.** Side-by-side highlighted comparison, a per-item mapping
    table with approve/keep toggles (untick a false positive to restore it),
    and an editable *outgoing text* box — exactly what will be sent, nothing
